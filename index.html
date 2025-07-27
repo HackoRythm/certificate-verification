@@ -1,90 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Hackorythm Certificate Verification</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Certificate Verification - Hackorythm</title>
   <style>
     body {
+      margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
+      background: linear-gradient(to right, #1e3c72, #2a5298);
       color: white;
       text-align: center;
-      padding: 2em;
+      padding: 40px 20px;
     }
-    .box {
-      background-color: rgba(255,255,255,0.1);
-      padding: 2em;
-      border-radius: 1em;
-      max-width: 500px;
-      margin: auto;
-      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
     }
     input {
-      padding: 0.6em;
+      padding: 10px 15px;
       width: 80%;
-      border-radius: 0.5em;
+      max-width: 400px;
+      border-radius: 10px;
       border: none;
-      margin-bottom: 1em;
+      font-size: 1em;
+      margin-bottom: 20px;
     }
     button {
-      padding: 0.6em 1em;
+      padding: 10px 25px;
+      font-size: 1em;
       border: none;
-      border-radius: 0.5em;
+      border-radius: 10px;
       background: #00c6ff;
+      background: linear-gradient(to right, #0072ff, #00c6ff);
       color: white;
-      font-weight: bold;
       cursor: pointer;
+      transition: background 0.3s;
     }
-    .result {
-      margin-top: 1.5em;
-      text-align: left;
+    button:hover {
+      background: linear-gradient(to right, #0052cc, #00aaff);
     }
-    img {
-      max-width: 100px;
-      border-radius: 50%;
-      margin-bottom: 1em;
+    #result {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      display: none;
+    }
+    .field {
+      margin-bottom: 10px;
+    }
+    .field strong {
+      color: #00f7ff;
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>🔍 Verify Your Certificate</h1>
-    <input type="text" id="certId" placeholder="Enter Certificate ID (e.g. HACK2025-001)" />
-    <br>
-    <button onclick="verifyCert()">Verify</button>
+  <h1>🔍 Verify Your Certificate</h1>
+  <input type="text" id="certId" placeholder="Enter Certificate ID (e.g., HACK2025-001)" />
+  <br />
+  <button onclick="verifyCertificate()">✅ Verify</button>
 
-    <div id="result" class="result" style="display:none;"></div>
-    <div id="error" style="color: red; display: none; margin-top: 1em;">❌ Certificate not found.</div>
-  </div>
+  <div id="result"></div>
 
   <script>
-    async function verifyCert() {
-      const certId = document.getElementById('certId').value.trim();
-      const resultDiv = document.getElementById('result');
-      const errorDiv = document.getElementById('error');
-      resultDiv.innerHTML = '';
-      resultDiv.style.display = 'none';
-      errorDiv.style.display = 'none';
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxL22LVJ6gFHDP3ztIoVd3snxqp8_fhRf9Nd-_5KLA-O18K6zSLkOv6iYC1tzwAQGPt/exec";
 
-      const res = await fetch("https://script.google.com/macros/s/AKfycbxL22LVJ6gFHDP3ztIoVd3snxqp8_fhRf9Nd-_5KLA-O18K6zSLkOv6iYC1tzwAQGPt/exec", {
-        method: "POST",
-        body: new URLSearchParams({ id: certId })
-      });
+    async function verifyCertificate() {
+      const certId = document.getElementById("certId").value.trim();
+      const resultDiv = document.getElementById("result");
+      resultDiv.style.display = "block";
+      resultDiv.innerHTML = "⏳ Please wait...";
 
-      const data = await res.json();
+      if (!certId) {
+        resultDiv.innerHTML = "❌ Please enter a valid certificate ID.";
+        return;
+      }
 
-      if (data.error) {
-        errorDiv.style.display = 'block';
-      } else {
-        resultDiv.style.display = 'block';
-        if (data['Photo URL']) {
-          resultDiv.innerHTML += `<img src="${data['Photo URL']}" alt="Certificate Holder Photo">`;
-        }
-        for (let key in data) {
-          if (key !== 'Photo URL') {
-            resultDiv.innerHTML += `<p><strong>${key}:</strong> ${data[key]}</p>`;
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          body: JSON.stringify({ certId }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await res.json();
+
+        if (!data.found) {
+          resultDiv.innerHTML = "❌ Certificate not found.";
+        } else {
+          let html = `<h2>🎓 Certificate Details</h2>`;
+          for (const key in data.details) {
+            html += `<div class="field"><strong>${key}:</strong> ${data.details[key]}</div>`;
           }
+          resultDiv.innerHTML = html;
         }
+      } catch (e) {
+        resultDiv.innerHTML = "❌ Something went wrong. Please try again.";
       }
     }
   </script>
