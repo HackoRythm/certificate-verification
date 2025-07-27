@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Certificate Verifier | Hackorythm</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #1d2671, #c33764);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-size: cover;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 15px;
+      padding: 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #ff6a00;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background: #ff9100;
+    }
+
+    .result {
+      margin-top: 20px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1rem;
+      border-radius: 15px;
+      display: none;
+    }
+
+    .result img {
+      width: 100px;
+      border-radius: 50%;
+      margin: 10px auto;
+      display: block;
+    }
+
+    .error {
+      color: #ffdddd;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Verify Certificate</h1>
+  <div class="container">
+    <input type="text" id="certId" placeholder="Enter Certificate ID (e.g. HACK2025-001)" />
+    <button onclick="verifyCert()">Verify</button>
+    <div class="result" id="resultBox"></div>
+    <div class="error" id="errorBox"></div>
+  </div>
+
+  <script type="module">
+    const SUPABASE_URL = 'https://rlmgpupqbcuhhhwwdjqv.supabase.co';
+    const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsbWdwdXBxYmN1aGhod3dkanF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MTU2NTAsImV4cCI6MjA2OTE5MTY1MH0.0G8S0-CsWrArXzwJyjhkZPzYWcDXuJJoFLMX5n1Xvm4';
+
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_API_KEY);
+
+    async function verifyCert() {
+      const certId = document.getElementById('certId').value.trim();
+      const resultBox = document.getElementById('resultBox');
+      const errorBox = document.getElementById('errorBox');
+
+      resultBox.style.display = 'none';
+      resultBox.innerHTML = '';
+      errorBox.innerText = '';
+
+      if (!certId) {
+        errorBox.innerText = '⚠️ Please enter a certificate ID';
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('certificates') // your table name
+        .select('*')
+        .eq('id', certId)
+        .single();
+
+      if (error || !data) {
+        errorBox.innerText = '❌ Certificate not found.';
+        return;
+      }
+
+      let html = '';
+      if (data.photo_url) {
+        html += `<img src="${data.photo_url}" alt="User Photo" />`;
+      }
+
+      for (const key in data) {
+        if (key !== 'photo_url' && data[key]) {
+          html += `<p><strong>${key.toUpperCase()}:</strong> ${data[key]}</p>`;
+        }
+      }
+
+      resultBox.innerHTML = html;
+      resultBox.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
